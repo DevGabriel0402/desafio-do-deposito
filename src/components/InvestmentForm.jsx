@@ -385,6 +385,6 @@ const Row = styled.div`
 
   @media (max-width: 600px) {
     gap: 16px;
-    grid-template-columns: 1fr 1.2fr; /* Date slightly smaller, Goals slightly bigger */
+    grid-template-columns: 45% 1fr; /* User requested ~45% for the first field (Date) */
   }
 `;
