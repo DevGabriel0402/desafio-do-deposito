@@ -6,11 +6,12 @@ import {
     onAuthStateChanged,
     signInAnonymously,
     sendPasswordResetEmail,
-    updatePassword
+    updatePassword,
+    updateProfile // [NEW]
 } from "firebase/auth";
 import { auth, db } from "../services/firebase";
 import { toast } from "react-toastify";
-import { collection, getDocs, deleteDoc, doc, setDoc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, setDoc, getDoc, updateDoc } from "firebase/firestore"; // [NEW] imports
 import { PiggyBank } from "lucide-react";
 
 const AuthContext = createContext();
@@ -21,11 +22,6 @@ export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState(null);
-
-    // Helper styled components for loading
-    // Since we are inside a function, we'll define them outside or use inline styles for simplicity within this context file 
-    // to avoid massive refactoring of the file structure. I will use a simple inline-style approach for the container.
-
 
     // User Profile State
     const [userName, setUserName] = useState("");
@@ -47,8 +43,9 @@ export function AuthProvider({ children }) {
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: user.email,
-                displayName: user.displayName || "", // Initially empty
+                displayName: user.displayName || "",
                 role: "client",
+                welcomeShown: false, // [NEW]
                 createdAt: new Date().toISOString()
             });
         } catch (e) {
@@ -73,75 +70,104 @@ export function AuthProvider({ children }) {
     // Wipe data for anonymous user
     async function wipeAnonymousData(uid) {
         try {
-            // 1. Delete Firestore Data
-            // Note: Client-side deletion of subcollections requires iterating
             const investmentsRef = collection(db, "users", uid, "investments");
             const snapshot = await getDocs(investmentsRef);
-
             const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
             await Promise.all(deletePromises);
-
-            // 2. Clear LocalStorage Cache
             localStorage.removeItem("@cofrinho/investments");
-
             console.log("Dados do usuário anônimo apagados com sucesso.");
         } catch (error) {
             console.error("Erro ao apagar dados anônimos:", error);
         }
     }
 
-    // Expose function to update name
-    function updateUserName(newName) {
+    // Sync Name to Firestore & Auth Profile
+    async function updateUserName(newName) {
         setUserName(newName);
         if (currentUser) {
-            localStorage.setItem(`user_name_${currentUser.uid}`, newName);
+            try {
+                // 1. Auth Profile
+                await updateProfile(currentUser, { displayName: newName });
+
+                // 2. Firestore Doc
+                const userRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userRef, { displayName: newName });
+
+                // 3. Local Storage (Backup)
+                localStorage.setItem(`user_name_${currentUser.uid}`, newName);
+            } catch (error) {
+                console.error("Error updating user name:", error);
+            }
         }
     }
 
-    function markWelcomeAsShown() {
+    async function markWelcomeAsShown() {
+        setIsWelcomePending(false);
         if (currentUser) {
-            localStorage.setItem(`welcome_shown_${currentUser.uid}`, "true");
-            setIsWelcomePending(false);
+            try {
+                // Firestore
+                const userRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userRef, { welcomeShown: true });
+
+                // Local Backup
+                localStorage.setItem(`welcome_shown_${currentUser.uid}`, "true");
+            } catch (error) {
+                console.error("Error updating welcome status:", error);
+            }
         }
     }
 
     useEffect(() => {
-        // Safety backup: Se o Firebase demorar muito, libera o app
-
         const safetyTimer = setTimeout(() => {
             console.warn("⚠️ Firebase auth check timed out. Force releasing app.");
             setLoading(false);
         }, 5000);
 
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            clearTimeout(safetyTimer); // Cancel safety timer
+            clearTimeout(safetyTimer);
             console.log("🔐 Auth State Changed / User:", user?.uid || "Anonymous/None");
 
             setCurrentUser(user);
-            setLoading(false);
 
             if (user) {
-                // Load User Name preference
-                const storedName = localStorage.getItem(`user_name_${user.uid}`);
-                if (storedName) {
-                    setUserName(storedName);
-                } else {
-                    // Default to Email if no name set
-                    setUserName(user.email || "Visitante");
-                }
+                // Fetch User Data from Firestore
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
 
-                // Check for First Login (Welcome Modal)
-                const welcomeShown = localStorage.getItem(`welcome_shown_${user.uid}`);
-                if (!welcomeShown && !storedName) {
-                    // If never shown AND no name set (implies new user or first run with this feature)
-                    setIsWelcomePending(true);
+                    if (userSnap.exists()) {
+                        const data = userSnap.data();
+
+                        // Set Name from Firestore (or Auth, or Local)
+                        const remoteName = data.displayName || user.displayName;
+                        setUserName(remoteName || localStorage.getItem(`user_name_${user.uid}`) || user.email);
+
+                        // Set Welcome Logic
+                        if (!data.welcomeShown) {
+                            setIsWelcomePending(true);
+                        } else {
+                            setIsWelcomePending(false);
+                        }
+                    } else {
+                        // Doc doesn't exist (legacy user or error), fallback to local
+                        const storedName = localStorage.getItem(`user_name_${user.uid}`);
+                        setUserName(storedName || user.displayName || user.email);
+
+                        const welcomeShown = localStorage.getItem(`welcome_shown_${user.uid}`);
+                        if (!welcomeShown && !storedName) setIsWelcomePending(true);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user profile:", error);
+                    // Fallback
+                    setUserName(user.displayName || user.email);
                 }
             } else {
                 setUserName("");
             }
 
+            setLoading(false);
+
             if (user && user.isAnonymous) {
-                // Handle Anonymous Timer
                 const storedExpiration = localStorage.getItem("@cofrinho/anon_expiration");
                 let expirationTime;
 
@@ -152,7 +178,6 @@ export function AuthProvider({ children }) {
                     localStorage.setItem("@cofrinho/anon_expiration", expirationTime.toString());
                 }
 
-                // Check interval
                 const interval = setInterval(() => {
                     const now = Date.now();
                     const remaining = expirationTime - now;
@@ -160,10 +185,8 @@ export function AuthProvider({ children }) {
                     if (remaining <= 0) {
                         clearInterval(interval);
                         setTimeLeft(0);
-
-                        // Time's up!
                         toast.info("Seu tempo de teste acabou! 🕒");
-                        localStorage.setItem("feedback_pending", "true"); // Flag for Login page
+                        localStorage.setItem("feedback_pending", "true");
                         wipeAnonymousData(user.uid).then(() => {
                             logout();
                             localStorage.removeItem("@cofrinho/anon_expiration");
@@ -175,7 +198,6 @@ export function AuthProvider({ children }) {
 
                 return () => clearInterval(interval);
             } else {
-                // If standard user or logged out, clear expiration
                 localStorage.removeItem("@cofrinho/anon_expiration");
                 setTimeLeft(null);
             }
