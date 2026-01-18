@@ -7,116 +7,137 @@ import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit 
 import { hexToRgba } from "../utils/colors";
 
 export default function AdminChatWidget() {
-    const { currentUser } = useAuth();
-    const [open, setOpen] = useState(false);
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState("");
-    const messagesEndRef = useRef(null);
+  const { currentUser } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const messagesEndRef = useRef(null);
 
-    const adminEmail = import.meta.env.VITE_EMAIL_ADMIN;
-    const sociaEmail = import.meta.env.VITE_EMAIL_SOCIO;
-    const adminName = import.meta.env.VITE_NOME_ADMIN || "Admin";
-    const sociaName = import.meta.env.VITE_NOME_SOCIO || "Sócia";
+  const adminEmail = import.meta.env.VITE_EMAIL_ADMIN;
+  const sociaEmail = import.meta.env.VITE_EMAIL_SOCIO;
+  const adminName = import.meta.env.VITE_NOME_ADMIN || "Admin";
+  const sociaName = import.meta.env.VITE_NOME_SOCIO || "Sócia";
 
-    // Check permission
-    const isAllowed = currentUser?.email === adminEmail || currentUser?.email === sociaEmail;
+  // Check permission
+  const isAllowed = currentUser?.email === adminEmail || currentUser?.email === sociaEmail;
 
-    useEffect(() => {
-        if (!isAllowed) return;
+  useEffect(() => {
+    if (!isAllowed) return;
 
-        const q = query(
-            collection(db, "admin_chat"),
-            orderBy("createdAt", "desc"),
-            limit(50)
-        );
+    const q = query(
+      collection(db, "admin_chat"),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })).reverse(); // Revert to show oldest first at top
-            setMessages(data);
-        });
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).reverse(); // Revert to show oldest first at top
+      setMessages(data);
+    });
 
-        return () => unsubscribe();
-    }, [isAllowed]);
+    return () => unsubscribe();
+  }, [isAllowed]);
 
-    useEffect(() => {
-        if (open && messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [messages, open]);
-
-    async function handleSend(e) {
-        e.preventDefault();
-        if (!newMessage.trim()) return;
-
-        // Determine sender name
-        let senderName = "Desconhecido";
-        if (currentUser.email === adminEmail) senderName = adminName;
-        if (currentUser.email === sociaEmail) senderName = sociaName;
-
-        try {
-            await addDoc(collection(db, "admin_chat"), {
-                text: newMessage,
-                senderEmail: currentUser.email,
-                senderName: senderName,
-                createdAt: serverTimestamp()
-            });
-            setNewMessage("");
-        } catch (error) {
-            console.error("Error sending message:", error);
-        }
+  // Calculate unread count
+  useEffect(() => {
+    if (open) {
+      // If open, we are reading everything.
+      setUnreadCount(0);
+      const now = Date.now();
+      localStorage.setItem("@cofrinho/admin_chat_last_read", now.toString());
+      return;
     }
 
-    if (!isAllowed) return null;
+    const lastRead = parseInt(localStorage.getItem("@cofrinho/admin_chat_last_read") || "0");
+    const unread = messages.filter(m => {
+      const createdAt = m.createdAt?.toMillis ? m.createdAt.toMillis() : Date.now();
+      return createdAt > lastRead;
+    }).length;
 
-    return (
-        <Wrapper>
-            {/* Chat Window */}
-            <ChatWindow $open={open}>
-                <Header>
-                    <HeaderTitle>
-                        Chat dos Sócios 🔒
-                    </HeaderTitle>
-                    <CloseBtn onClick={() => setOpen(false)}>
-                        <X size={16} />
-                    </CloseBtn>
-                </Header>
+    setUnreadCount(unread);
+  }, [messages, open]);
 
-                <MessagesArea>
-                    {messages.map((msg) => {
-                        const isMe = msg.senderEmail === currentUser.email;
-                        return (
-                            <MessageBubble key={msg.id} $isMe={isMe}>
-                                <BubbleContent $isMe={isMe}>
-                                    <SenderName>{msg.senderName}</SenderName>
-                                    <Text>{msg.text}</Text>
-                                </BubbleContent>
-                            </MessageBubble>
-                        );
-                    })}
-                    <div ref={messagesEndRef} />
-                </MessagesArea>
+  useEffect(() => {
+    if (open && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, open]);
 
-                <InputArea onSubmit={handleSend}>
-                    <Input
-                        value={newMessage}
-                        onChange={e => setNewMessage(e.target.value)}
-                        placeholder="Digite algo..."
-                    />
-                    <SendBtn type="submit" disabled={!newMessage.trim()}>
-                        <Send size={16} />
-                    </SendBtn>
-                </InputArea>
-            </ChatWindow>
+  async function handleSend(e) {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
 
-            {/* Floating Toggle Button */}
-            <ToggleBtn onClick={() => setOpen(!open)} $open={open}>
-                {open ? <X size={24} /> : <MessageCircle size={24} />}
-            </ToggleBtn>
-        </Wrapper>
-    );
+    // Determine sender name
+    let senderName = "Desconhecido";
+    if (currentUser.email === adminEmail) senderName = adminName;
+    if (currentUser.email === sociaEmail) senderName = sociaName;
+
+    try {
+      await addDoc(collection(db, "admin_chat"), {
+        text: newMessage,
+        senderEmail: currentUser.email,
+        senderName: senderName,
+        createdAt: serverTimestamp()
+      });
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  }
+
+  if (!isAllowed) return null;
+
+  return (
+    <Wrapper>
+      {/* Chat Window */}
+      <ChatWindow $open={open}>
+        <Header>
+          <HeaderTitle>
+            Chat dos Sócios 🔒
+          </HeaderTitle>
+          <CloseBtn onClick={() => setOpen(false)}>
+            <X size={16} />
+          </CloseBtn>
+        </Header>
+
+        <MessagesArea>
+          {messages.map((msg) => {
+            const isMe = msg.senderEmail === currentUser.email;
+            return (
+              <MessageBubble key={msg.id} $isMe={isMe}>
+                <BubbleContent $isMe={isMe}>
+                  <SenderName>{msg.senderName}</SenderName>
+                  <Text>{msg.text}</Text>
+                </BubbleContent>
+              </MessageBubble>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </MessagesArea>
+
+        <InputArea onSubmit={handleSend}>
+          <Input
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
+            placeholder="Digite algo..."
+          />
+          <SendBtn type="submit" disabled={!newMessage.trim()}>
+            <Send size={16} />
+          </SendBtn>
+        </InputArea>
+      </ChatWindow>
+
+      {/* Floating Toggle Button */}
+      <ToggleBtn onClick={() => setOpen(!open)} $open={open}>
+        {open ? <X size={24} /> : <MessageCircle size={24} />}
+        {!open && unreadCount > 0 && <Badge>{unreadCount}</Badge>}
+      </ToggleBtn>
+    </Wrapper>
+  );
 }
 
 const Wrapper = styled.div`
@@ -148,6 +169,24 @@ const ToggleBtn = styled.button`
     transform: scale(1.05);
     background: ${({ theme }) => theme.colors.surface2};
   }
+`;
+
+const Badge = styled.div`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: ${({ theme }) => theme.colors.danger};
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  border: 2px solid ${({ theme }) => theme.colors.bg};
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 `;
 
 const ChatWindow = styled.div`
