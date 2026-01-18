@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, PiggyBank, ListChecks } from "lucide-react";
+import { LayoutDashboard, ListChecks } from "lucide-react";
+import { GiTakeMyMoney } from "react-icons/gi";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
 import { hexToRgba } from "../utils/colors.js";
 
@@ -15,7 +16,7 @@ export default function BottomBar() {
         <CenterContainer>
           <NotchLeft />
           <CenterTab to="/investimentos">
-            <PiggyBank size={48} color="#ffffff" fill="#ffffff" fillOpacity={1} />
+            <GiTakeMyMoney size={48} color="#ffffff" />
           </CenterTab>
           <NotchRight />
         </CenterContainer>

@@ -54,7 +54,7 @@ export default function MeusInvestimentos() {
 
     return (
         <Wrap>
-            <h2 style={{ margin: 0 }}>Meus investimentos</h2>
+            <h2 style={{ margin: 0 }}>Meus Desafios</h2>
 
             <Filters>
                 <Chip $on={filter === "andamento"} onClick={() => setFilter("andamento")}>

@@ -18,8 +18,8 @@ export default function AdminChatWidget() {
 
   const adminEmail = import.meta.env.VITE_EMAIL_ADMIN;
   const sociaEmail = import.meta.env.VITE_EMAIL_SOCIO;
-  const adminName = import.meta.env.VITE_NOME_ADMIN || "Admin";
-  const sociaName = import.meta.env.VITE_NOME_SOCIO || "Sócia";
+  const adminName = import.meta.env.VITE_NOME_ADMIN?.includes("@") ? "Gabriel" : (import.meta.env.VITE_NOME_ADMIN || "Admin");
+  const sociaName = import.meta.env.VITE_NOME_SOCIO?.includes("@") ? "Ana Carolina" : (import.meta.env.VITE_NOME_SOCIO || "Sócia");
 
   // Check permission
   const isAllowed = currentUser?.email === adminEmail || currentUser?.email === sociaEmail;

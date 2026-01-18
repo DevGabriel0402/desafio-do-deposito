@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, PiggyBank, ListChecks, Target, ChevronLeft, ChevronRight, Sun, Moon, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, ListChecks, Target, ChevronLeft, ChevronRight, Sun, Moon, Settings, LogOut } from "lucide-react";
+import { GiTakeMyMoney } from "react-icons/gi";
 import { loadData, saveData } from "../storage.js";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -48,14 +49,14 @@ export default function Sidebar({ collapsed, onToggle }) {
             {!collapsed && <span>Dashboard</span>}
           </Item>
 
-          <Item to="/investimentos" title={collapsed ? "Investimentos" : ""}>
-            <PiggyBank size={18} />
-            {!collapsed && <span>Investimentos</span>}
+          <Item to="/investimentos" title={collapsed ? "Desafios" : ""}>
+            <GiTakeMyMoney size={18} />
+            {!collapsed && <span>Desafios</span>}
           </Item>
 
-          <Item to="/meus" title={collapsed ? "Meus" : ""}>
+          <Item to="/meus" title={collapsed ? "Meus Desafios" : ""}>
             <ListChecks size={18} />
-            {!collapsed && <span>Meus</span>}
+            {!collapsed && <span>Meus Desafios</span>}
           </Item>
         </Nav>
 

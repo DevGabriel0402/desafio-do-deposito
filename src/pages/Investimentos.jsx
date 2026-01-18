@@ -67,10 +67,10 @@ export default function Investimentos() {
     return (
         <Grid>
             <Header>
-                <h2 style={{ margin: 0 }}>Investimentos</h2>
+                <h2 style={{ margin: 0 }}>Desafios</h2>
                 <Button onClick={() => setOpen(true)}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                        <Plus size={18} /> Novo investimento
+                        <Plus size={18} /> Novo desafio
                     </span>
                 </Button>
             </Header>
