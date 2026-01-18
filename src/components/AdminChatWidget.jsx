@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../services/firebase";
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit } from "firebase/firestore";
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit, deleteDoc, doc } from "firebase/firestore";
 import { hexToRgba } from "../utils/colors";
 import { toast } from "react-toastify";
 
@@ -89,6 +89,12 @@ export default function AdminChatWidget() {
     }
   }, [messages, open]);
 
+  async function handleDelete(id) {
+    if (confirm("Apagar esta mensagem?")) {
+      await deleteDoc(doc(db, "admin_chat", id));
+    }
+  }
+
   async function handleSend(e) {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -119,7 +125,7 @@ export default function AdminChatWidget() {
       <ChatWindow $open={open}>
         <Header>
           <HeaderTitle>
-            Chat dos Sócios 🔒
+            Chat privado
           </HeaderTitle>
           <CloseBtn onClick={() => setOpen(false)}>
             <X size={16} />
@@ -134,6 +140,9 @@ export default function AdminChatWidget() {
                 <BubbleContent $isMe={isMe}>
                   <SenderName>{msg.senderName}</SenderName>
                   <Text>{msg.text}</Text>
+                  <DeleteMessageBtn onClick={() => handleDelete(msg.id)}>
+                    <Trash2 size={12} />
+                  </DeleteMessageBtn>
                 </BubbleContent>
               </MessageBubble>
             );
@@ -169,7 +178,7 @@ const Wrapper = styled.div`
   z-index: 1000;
 
   @media (max-width: 900px) {
-    bottom: 90px;
+    bottom: 94px; /* Default was 90px, raised by 4px */
     right: 24px;
   }
 `;
@@ -191,24 +200,6 @@ const ToggleBtn = styled.button`
     transform: scale(1.05);
     background: ${({ theme }) => theme.colors.surface2};
   }
-`;
-
-const Badge = styled.div`
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: ${({ theme }) => theme.colors.danger};
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  height: 20px;
-  min-width: 20px;
-  padding: 0 6px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  border: 2px solid ${({ theme }) => theme.colors.bg};
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 `;
 
 const ChatWindow = styled.div`
@@ -288,6 +279,12 @@ const BubbleContent = styled.div`
   border: 1px solid ${({ $isMe, theme }) => $isMe ? "transparent" : theme.colors.border};
   
   ${({ $isMe }) => $isMe ? "border-bottom-right-radius: 2px;" : "border-bottom-left-radius: 2px;"}
+  
+  /* Show delete button on hover */
+  position: relative;
+  &:hover button {
+      opacity: 1;
+  }
 `;
 
 const SenderName = styled.div`
@@ -300,6 +297,27 @@ const SenderName = styled.div`
 const Text = styled.div`
   font-size: 13px;
   line-height: 1.4;
+`;
+
+const DeleteMessageBtn = styled.button`
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.2);
+    border: none;
+    border-radius: 4px;
+    padding: 2px;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background: rgba(239, 68, 68, 0.8); /* Red */
+    }
 `;
 
 const InputArea = styled.form`
@@ -336,4 +354,22 @@ const SendBtn = styled.button`
   place-items: center;
   cursor: ${({ disabled }) => disabled ? "not-allowed" : "pointer"};
   transition: all 0.2s;
+`;
+
+const Badge = styled.div`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: ${({ theme }) => theme.colors.danger};
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  border: 2px solid ${({ theme }) => theme.colors.bg};
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 `;
