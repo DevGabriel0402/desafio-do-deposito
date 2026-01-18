@@ -12,125 +12,125 @@ import InvestmentForm from "../components/InvestmentForm.jsx";
 import { toast } from "react-toastify";
 import { APP_ICONS } from "../utils/appIcons.js";
 
-import { ListChecks } from "lucide-react";
+import { ListChecks, Pencil, Trash2 } from "lucide-react";
 
 export default function MeusInvestimentos() {
-    const { investments, updateInvestment, deleteInvestment } = useData();
-    const theme = useTheme();
-    const [filter, setFilter] = useState("andamento");
-    const [editOpen, setEditOpen] = useState(false);
-    const [editInv, setEditInv] = useState(null);
-    const [deleteId, setDeleteId] = useState(null);
+  const { investments, updateInvestment, deleteInvestment } = useData();
+  const theme = useTheme();
+  const [filter, setFilter] = useState("andamento");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editInv, setEditInv] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
 
-    function handleUpdate(payload) {
-        // Form sends full object with ID
-        const { id, ...rest } = payload;
-        updateInvestment(id, rest); // Call context
-        setEditOpen(false); // Close modal
-    }
+  function handleUpdate(payload) {
+    // Form sends full object with ID
+    const { id, ...rest } = payload;
+    updateInvestment(id, rest); // Call context
+    setEditOpen(false); // Close modal
+  }
 
-    function confirmDelete(id) {
-        setDeleteId(id);
-    }
+  function confirmDelete(id) {
+    setDeleteId(id);
+  }
 
-    function handleDelete() {
-        if (!deleteId) return;
-        deleteInvestment(deleteId); // Call context
-        setDeleteId(null);
-    }
+  function handleDelete() {
+    if (!deleteId) return;
+    deleteInvestment(deleteId); // Call context
+    setDeleteId(null);
+  }
 
-    const list = useMemo(() => {
-        const withProgress = investments.map((inv) => {
-            const doneCount = inv.deposits.filter((d) => d.done).length;
-            const totalCount = inv.deposits.length;
-            const completed = totalCount > 0 && doneCount === totalCount;
-            return { ...inv, doneCount, totalCount, completed };
-        });
+  const list = useMemo(() => {
+    const withProgress = investments.map((inv) => {
+      const doneCount = inv.deposits.filter((d) => d.done).length;
+      const totalCount = inv.deposits.length;
+      const completed = totalCount > 0 && doneCount === totalCount;
+      return { ...inv, doneCount, totalCount, completed };
+    });
 
-        if (filter === "andamento") return withProgress.filter((i) => !i.completed);
-        if (filter === "concluidos") return withProgress.filter((i) => i.completed);
-        return withProgress;
-    }, [investments, filter]);
+    if (filter === "andamento") return withProgress.filter((i) => !i.completed);
+    if (filter === "concluidos") return withProgress.filter((i) => i.completed);
+    return withProgress;
+  }, [investments, filter]);
 
-    return (
-        <Wrap>
-            <h2 style={{ margin: 0 }}>Meus Desafios</h2>
+  return (
+    <Wrap>
+      <h2 style={{ margin: 0 }}>Meus Desafios</h2>
 
-            <Filters>
-                <Chip $on={filter === "andamento"} onClick={() => setFilter("andamento")}>
-                    Em andamento
-                </Chip>
-                <Chip $on={filter === "concluidos"} onClick={() => setFilter("concluidos")}>
-                    Concluídos
-                </Chip>
-                <Chip $on={filter === "todos"} onClick={() => setFilter("todos")}>
-                    Todos
-                </Chip>
-            </Filters>
+      <Filters>
+        <Chip $on={filter === "andamento"} onClick={() => setFilter("andamento")}>
+          Em andamento
+        </Chip>
+        <Chip $on={filter === "concluidos"} onClick={() => setFilter("concluidos")}>
+          Concluídos
+        </Chip>
+        <Chip $on={filter === "todos"} onClick={() => setFilter("todos")}>
+          Todos
+        </Chip>
+      </Filters>
 
-            <Grid>
-                {list.length === 0 ? (
-                    <Card style={{ color: theme.name === "dark" ? theme.colors.text : "rgba(15,23,42,0.65)" }}>
-                        Nada por aqui ainda 🙂
-                    </Card>
-                ) : (
-                    list.map((inv) => {
-                        const InvIcon = APP_ICONS[inv.icon] || APP_ICONS.Target;
-                        const bankInfo = BANKS.find(b => b.value === inv.bank);
-                        return (
-                            <GlassCard key={inv.id}>
-                                <Top>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <IconBox>
-                                            <InvIcon size={18} />
-                                        </IconBox>
-                                        <b style={{ color: theme.name === "dark" ? theme.colors.text : theme.colors.brand }}>{inv.name}</b>
-                                    </div>
-                                    <StatusBadge $done={inv.completed}>
-                                        {inv.completed ? "Concluído" : "Em andamento"}
-                                    </StatusBadge>
-                                </Top>
-                                <BankRow style={{ color: bankInfo ? bankInfo.color : (theme.name === "dark" ? "#FFFFFF" : theme.colors.text) }}>
-                                    <BankIcon bankValue={inv.bank} size={20} />
-                                    <span>{bankInfo ? bankInfo.label : inv.bank}</span>
-                                </BankRow>
-                                <small style={{ color: theme.name === "dark" ? theme.colors.text : theme.colors.brand, opacity: 1, fontWeight: 700 }}>
-                                    Depósitos: {inv.doneCount}/{inv.totalCount} • Início: {formatDateBR(inv.startDate)}
-                                </small>
-                                <Actions>
-                                    <Button size="sm" variant="outline" onClick={() => { setEditInv(inv); setEditOpen(true); }}>
-                                        Editar
-                                    </Button>
-                                    <Button size="sm" variant="danger" onClick={() => confirmDelete(inv.id)}>
-                                        Excluir
-                                    </Button>
-                                </Actions>
-                            </GlassCard>
-                        );
-                    })
-                )}
-            </Grid>
+      <Grid>
+        {list.length === 0 ? (
+          <Card style={{ color: theme.name === "dark" ? theme.colors.text : "rgba(15,23,42,0.65)" }}>
+            Nada por aqui ainda 🙂
+          </Card>
+        ) : (
+          list.map((inv) => {
+            const InvIcon = APP_ICONS[inv.icon] || APP_ICONS.Target;
+            const bankInfo = BANKS.find(b => b.value === inv.bank);
+            return (
+              <GlassCard key={inv.id}>
+                <Top>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <IconBox>
+                      <InvIcon size={18} />
+                    </IconBox>
+                    <b style={{ color: theme.name === "dark" ? theme.colors.text : theme.colors.brand }}>{inv.name}</b>
+                  </div>
+                  <StatusBadge $done={inv.completed}>
+                    {inv.completed ? "Concluído" : "Em andamento"}
+                  </StatusBadge>
+                </Top>
+                <BankRow style={{ color: bankInfo ? bankInfo.color : (theme.name === "dark" ? "#FFFFFF" : theme.colors.text) }}>
+                  <BankIcon bankValue={inv.bank} size={20} />
+                  <span>{bankInfo ? bankInfo.label : inv.bank}</span>
+                </BankRow>
+                <small style={{ color: theme.name === "dark" ? theme.colors.text : theme.colors.brand, opacity: 1, fontWeight: 700 }}>
+                  Depósitos: {inv.doneCount}/{inv.totalCount} • Início: {formatDateBR(inv.startDate)}
+                </small>
+                <Actions>
+                  <ActionBtn onClick={() => { setEditInv(inv); setEditOpen(true); }} title="Editar">
+                    <Pencil size={16} />
+                  </ActionBtn>
+                  <ActionBtn $danger onClick={() => confirmDelete(inv.id)} title="Excluir">
+                    <Trash2 size={16} />
+                  </ActionBtn>
+                </Actions>
+              </GlassCard>
+            );
+          })
+        )}
+      </Grid>
 
 
-            <Modal title="Editar investimento" open={editOpen} onClose={() => setEditOpen(false)}>
-                <InvestmentForm
-                    initialData={editInv}
-                    onSave={handleUpdate}
-                    onCancel={() => setEditOpen(false)}
-                />
-            </Modal>
+      <Modal title="Editar investimento" open={editOpen} onClose={() => setEditOpen(false)}>
+        <InvestmentForm
+          initialData={editInv}
+          onSave={handleUpdate}
+          onCancel={() => setEditOpen(false)}
+        />
+      </Modal>
 
-            <Modal title="Excluir investimento?" open={!!deleteId} onClose={() => setDeleteId(null)}>
-                <ConfirmContent>
-                    <p>Tem certeza que deseja excluir este investimento? Essa ação não pode ser desfeita.</p>
-                    <Actions>
-                        <Button variant="ghost" onClick={() => setDeleteId(null)}>Cancelar</Button>
-                        <Button variant="danger" onClick={handleDelete}>Excluir</Button>
-                    </Actions>
-                </ConfirmContent>
-            </Modal>
-        </Wrap >
-    );
+      <Modal title="Excluir investimento?" open={!!deleteId} onClose={() => setDeleteId(null)}>
+        <ConfirmContent>
+          <p>Tem certeza que deseja excluir este investimento? Essa ação não pode ser desfeita.</p>
+          <Actions>
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>Cancelar</Button>
+            <Button variant="danger" onClick={handleDelete}>Excluir</Button>
+          </Actions>
+        </ConfirmContent>
+      </Modal>
+    </Wrap >
+  );
 }
 
 const Wrap = styled.div`
@@ -187,9 +187,9 @@ const StatusBadge = styled.div`
   
   background: ${({ $done, theme }) => ($done ? "rgba(16, 185, 129, 0.1)" : hexToRgba(theme.colors.brand, 0.1))};
   color: ${({ $done, theme }) => {
-        if (theme.name === "dark") return "#FFFFFF";
-        return $done ? "#10b981" : theme.colors.brand;
-    }};
+    if (theme.name === "dark") return "#FFFFFF";
+    return $done ? "#10b981" : theme.colors.brand;
+  }};
   border: 1px solid ${({ $done, theme }) => ($done ? "rgba(16, 185, 129, 0.2)" : hexToRgba(theme.colors.brand, 0.2))};
   backdrop-filter: blur(4px);
 `;
@@ -262,4 +262,24 @@ const IconBox = styled.div`
   display: grid;
   place-items: center;
   flex-shrink: 0;
+`;
+
+const ActionBtn = styled.button`
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface2};
+  color: ${({ $danger, theme }) => {
+    if ($danger) return "#ef4444";
+    return theme.name === "dark" ? "#FFFFFF" : theme.colors.muted;
+  }};
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-grid;
+  place-items: center;
+
+  &:hover {
+    background: ${({ $danger }) => ($danger ? "rgba(239, 68, 68, 0.1)" : "rgba(0,0,0,0.05)")};
+    border-color: ${({ $danger }) => ($danger ? "#ef4444" : "rgba(0,0,0,0.1)")};
+  }
 `;

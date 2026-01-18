@@ -201,26 +201,28 @@ export default function InvestmentForm({ onCreate, onSave, onCancel, initialData
                     />
                 </Field>
 
-                <Field>
-                    <Label><CalendarDays size={14} /> Data de início</Label>
-                    <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                    />
-                </Field>
+                <Row>
+                    <Field>
+                        <Label><CalendarDays size={14} /> Data</Label>
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                        />
+                    </Field>
 
-                <Field>
-                    <Label><Target size={14} /> Depósitos (Meta)</Label>
-                    <Input
-                        type="number"
-                        min="1"
-                        value={depositCount}
-                        onChange={(e) => setDepositCount(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                    />
-                </Field>
+                    <Field>
+                        <Label><Target size={14} /> Metas</Label>
+                        <Input
+                            type="number"
+                            min="1"
+                            value={depositCount}
+                            onChange={(e) => setDepositCount(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                        />
+                    </Field>
+                </Row>
             </FormGrid>
 
             <Actions>
@@ -371,12 +373,13 @@ const ConfirmContent = styled.div`
 `;
 
 const Message = styled.div`
-  white-space: pre-wrap;
-  line-height: 1.5;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 15px;
-  background: ${({ theme }) => theme.colors.surface2};
   padding: 16px;
   border-radius: 12px;
   border: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const Row = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.space(2)};
 `;

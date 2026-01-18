@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
-import { CheckCircle2, Landmark, Trash2, Pencil } from "lucide-react";
+import { CheckCircle2, Landmark, Trash2, Pencil, ChevronDown, ChevronUp } from "lucide-react";
 import { BANKS } from "./BankPicker.jsx";
 import { Card } from "../ui/Card.jsx";
 import { formatBRL } from "../utils/format.js";
@@ -12,100 +12,128 @@ import { APP_ICONS } from "../utils/appIcons.js";
 
 
 export default function InvestmentCard({ inv, onToggleDeposit, onOpenSmart, onEdit, onDelete }) {
-    const totalDone = useMemo(
-        () => inv.deposits.filter((d) => d.done).reduce((s, d) => s + d.value, 0),
-        [inv.deposits]
-    );
-    const totalAll = useMemo(
-        () => inv.deposits.reduce((s, d) => s + d.value, 0),
-        [inv.deposits]
-    );
+  const totalDone = useMemo(
+    () => inv.deposits.filter((d) => d.done).reduce((s, d) => s + d.value, 0),
+    [inv.deposits]
+  );
+  const totalAll = useMemo(
+    () => inv.deposits.reduce((s, d) => s + d.value, 0),
+    [inv.deposits]
+  );
 
-    const bankInfo = useMemo(
-        () => BANKS.find(b => b.value === inv.bank),
-        [inv.bank]
-    );
+  const bankInfo = useMemo(
+    () => BANKS.find(b => b.value === inv.bank),
+    [inv.bank]
+  );
 
-    const doneCount = inv.deposits.filter((d) => d.done).length;
-    const progress = totalAll ? Math.round((totalDone / totalAll) * 100) : 0;
+  const doneCount = inv.deposits.filter((d) => d.done).length;
+  const progress = totalAll ? Math.round((totalDone / totalAll) * 100) : 0;
 
-    const InvIcon = APP_ICONS[inv.icon] || APP_ICONS.Target;
+  const InvIcon = APP_ICONS[inv.icon] || APP_ICONS.Target;
 
-    return (
-        <Wrap>
-            <Top>
-                <div>
-                    <TitleRow>
-                        <NameGroup>
-                            <IconBox>
-                                <InvIcon size={20} />
-                            </IconBox>
-                            <Title>{inv.name}</Title>
-                        </NameGroup>
-                        {onOpenSmart && (
-                            <SmartBtn onClick={() => onOpenSmart(inv)}>
-                                <APP_ICONS.GiPayMoney size={15} /> Depósito Inteligente
-                            </SmartBtn>
-                        )}
-                    </TitleRow>
-                    <Meta>
-                        <BankTag $color={bankInfo?.color} $text={bankInfo?.text}>
-                            <BankIcon bankValue={inv.bank} size={16} />
-                            {bankInfo?.label || inv.bank}
-                        </BankTag>
-                        <span>• Início: <b>{formatDateBR(inv.startDate)}</b></span>
-                    </Meta>
-                </div>
+  // Expand logic
+  const [expanded, setExpanded] = useState(false);
+  // Limit of items to show when collapsed. 24 items is roughly 3-4 rows depending on screen.
+  const COLLAPSE_LIMIT = 24;
+  const shouldCollapse = inv.deposits.length > COLLAPSE_LIMIT;
 
-                <Right>
-                    {(onEdit || onDelete) && (
-                        <Actions>
-                            {onEdit && (
-                                <ActionBtn onClick={() => onEdit(inv)} title="Editar">
-                                    <Pencil size={16} />
-                                </ActionBtn>
-                            )}
-                            {onDelete && (
-                                <ActionBtn $danger onClick={() => onDelete(inv.id)} title="Excluir">
-                                    <Trash2 size={16} />
-                                </ActionBtn>
-                            )}
-                        </Actions>
-                    )}
-                    <Big>{formatBRL(totalDone)} <span>/ {formatBRL(totalAll)}</span></Big>
-                    <Small>{doneCount} de {inv.deposits.length} depósitos • {progress}%</Small>
-                </Right>
-            </Top>
+  // Determine which deposits to show
+  const visibleDeposits = shouldCollapse && !expanded
+    ? inv.deposits.slice(0, COLLAPSE_LIMIT)
+    : inv.deposits;
 
-            <Bar>
-                <Fill $p={progress} />
-            </Bar>
+  return (
+    <Wrap>
+      <Top>
+        <div>
+          <TitleRow>
+            <NameGroup>
+              <IconBox>
+                <InvIcon size={20} />
+              </IconBox>
+              <Title>{inv.name}</Title>
+            </NameGroup>
+            {onOpenSmart && (
+              <SmartBtn onClick={() => onOpenSmart(inv)}>
+                <APP_ICONS.GiPayMoney size={15} /> Depósito Inteligente
+              </SmartBtn>
+            )}
+          </TitleRow>
+          <Meta>
+            <BankTag $color={bankInfo?.color} $text={bankInfo?.text}>
+              <BankIcon bankValue={inv.bank} size={16} />
+              {bankInfo?.label || inv.bank}
+            </BankTag>
+            <span>• Início: <b>{formatDateBR(inv.startDate)}</b></span>
+          </Meta>
+        </div>
 
-            <Buttons>
-                {inv.deposits.map((d, idx) => (
-                    <Chip
-                        key={idx}
-                        disabled={d.done}
-                        $done={d.done}
-                        onClick={() => {
-                            if (d.done) return;
-                            onToggleDeposit(inv.id, idx);
-                        }}
-                        title={d.done ? `Feito em ${d.doneAt}` : "Clique para depositar"}
-                    >
-                        {d.done ? <CheckCircle2 size={16} /> : null}
-                        {d.value}
-                    </Chip>
-                ))}
-            </Buttons>
-        </Wrap>
-    );
+        <Right>
+          {(onEdit || onDelete) && (
+            <Actions>
+              {onEdit && (
+                <ActionBtn onClick={() => onEdit(inv)} title="Editar">
+                  <Pencil size={16} />
+                </ActionBtn>
+              )}
+              {onDelete && (
+                <ActionBtn $danger onClick={() => onDelete(inv.id)} title="Excluir">
+                  <Trash2 size={16} />
+                </ActionBtn>
+              )}
+            </Actions>
+          )}
+          <Big>{formatBRL(totalDone)} <span>/ {formatBRL(totalAll)}</span></Big>
+          <Small>{doneCount} de {inv.deposits.length} depósitos • {progress}%</Small>
+        </Right>
+      </Top>
+
+      <Bar>
+        <Fill $p={progress} />
+      </Bar>
+
+      <Buttons>
+        {visibleDeposits.map((d, idx) => (
+          <Chip
+            key={idx}
+            disabled={d.done}
+            $done={d.done}
+            onClick={() => {
+              if (d.done) return;
+              onToggleDeposit(inv.id, inv.deposits.indexOf(d));
+            }}
+            title={d.done ? `Feito em ${d.doneAt}` : "Clique para depositar"}
+          >
+            {d.done ? <CheckCircle2 size={16} /> : null}
+            {d.value}
+          </Chip>
+        ))}
+      </Buttons>
+
+      {shouldCollapse && (
+        <ExpandContainer>
+          <ExpandBtn onClick={() => setExpanded(!expanded)}>
+            {expanded ? (
+              <>
+                <ChevronUp size={16} /> Mostrar menos
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} /> Mostrar todos ({inv.deposits.length})
+              </>
+            )}
+          </ExpandBtn>
+        </ExpandContainer>
+      )}
+    </Wrap>
+  );
 }
 
 const Wrap = styled(Card)`
   display: grid;
   gap: ${({ theme }) => theme.space(1.5)};
 `;
+
 
 const Top = styled.div`
   display: flex;
@@ -141,10 +169,8 @@ const IconBox = styled.div`
   display: grid;
   place-items: center;
 
-  @media (max-width: 600px) {
-    width: 32px;
-    height: 32px;
-    svg { width: 18px; height: 18px; }
+  @media (max-width: 760px) {
+    display: none;
   }
 `;
 
@@ -189,9 +215,9 @@ const Meta = styled.div`
 
 const BankTag = styled.span`
   color: ${({ theme, $color }) => {
-        if (theme.name === "dark") return "#FFFFFF";
-        return $color === "#fbf600" ? "#0038a8" : $color || "inherit";
-    }};
+    if (theme.name === "dark") return "#FFFFFF";
+    return $color === "#fbf600" ? "#0038a8" : $color || "inherit";
+  }};
   font-weight: 800;
   display: inline-flex;
   align-items: center;
@@ -220,9 +246,9 @@ const ActionBtn = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface2};
   color: ${({ $danger, theme }) => {
-        if ($danger) return "#ef4444";
-        return theme.name === "dark" ? "#FFFFFF" : theme.colors.muted;
-    }};
+    if ($danger) return "#ef4444";
+    return theme.name === "dark" ? "#FFFFFF" : theme.colors.muted;
+  }};
   cursor: pointer;
   transition: all 0.2s;
 
@@ -304,5 +330,30 @@ const Chip = styled.button`
 
   &:hover {
     border-color: ${({ theme }) => hexToRgba(theme.colors.brand, 0.35)};
+  }
+`;
+
+const ExpandContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+`;
+
+const ExpandBtn = styled.button`
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.brand};
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 99px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: ${({ theme }) => hexToRgba(theme.colors.brand, 0.1)};
   }
 `;

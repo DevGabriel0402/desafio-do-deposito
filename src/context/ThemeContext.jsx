@@ -83,8 +83,7 @@ export function ThemeToggleProvider({ children }) {
         toggleTheme,
         brandColor,
         setBrandColor,
-        brandColor,
-        setBrandColor,
+
         appIcon,
         setAppIcon,
         appName,
