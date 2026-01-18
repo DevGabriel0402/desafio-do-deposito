@@ -382,4 +382,9 @@ const Row = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${({ theme }) => theme.space(2)};
+
+  @media (max-width: 600px) {
+    gap: 16px;
+    grid-template-columns: 1fr 1.2fr; /* Date slightly smaller, Goals slightly bigger */
+  }
 `;
