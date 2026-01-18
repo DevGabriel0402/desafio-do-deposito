@@ -5,12 +5,12 @@ import { X } from "lucide-react";
 import { Card } from "./Card.jsx";
 import { Button } from "./Button.jsx";
 
-export default function Modal({ title, open, onClose, children, maxWidth = "600px" }) {
+export default function Modal({ title, open, onClose, children, maxWidth = "600px", fullScreen = false }) {
     if (!open) return null;
 
     return createPortal(
-        <Overlay onClick={onClose}>
-            <Wrap onClick={(e) => e.stopPropagation()} $maxWidth={maxWidth}>
+        <Overlay onClick={onClose} $fullScreen={fullScreen}>
+            <Wrap onClick={(e) => e.stopPropagation()} $maxWidth={maxWidth} $fullScreen={fullScreen}>
                 <Header>
                     <h3 style={{ margin: 0 }}>{title}</h3>
                     <Button variant="ghost" onClick={onClose} style={{ padding: "10px 12px" }}>
@@ -31,12 +31,16 @@ const Overlay = styled.div`
   background: rgba(0,0,0,0.62);
   display: grid;
   place-items: center;
-  padding: ${({ theme }) => theme.space(2)};
+  padding: ${({ theme, $fullScreen }) => $fullScreen ? 0 : theme.space(2)};
 `;
 
 const Wrap = styled(Card)`
-  width: min(${({ $maxWidth }) => $maxWidth}, 100%);
+  width: ${({ $fullScreen, $maxWidth }) => $fullScreen ? "100%" : `min(${$maxWidth}, 100%)`};
+  height: ${({ $fullScreen }) => $fullScreen ? "100%" : "auto"};
+  border-radius: ${({ $fullScreen, theme }) => $fullScreen ? 0 : theme.radius.lg}; // Assuming theme.radius.lg is default relative to Card
   padding: ${({ theme }) => theme.space(2)};
+  display: flex;
+  flex-direction: column;
 `;
 
 const Header = styled.div`

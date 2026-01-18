@@ -13,6 +13,7 @@ import Login from "./pages/Login.jsx";
 
 import ProtectedRoute from "./ui/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
+import AdminChatWidget from "./components/AdminChatWidget.jsx";
 
 export default function App() {
   const [collapsed, setCollapsed] = React.useState(false);
@@ -62,6 +63,7 @@ export default function App() {
       </Frame>
 
       <BottomBar />
+      <AdminChatWidget />
     </>
   );
 }

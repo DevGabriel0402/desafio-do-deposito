@@ -146,6 +146,7 @@ export function AuthProvider({ children }) {
 
                         // Time's up!
                         toast.info("Seu tempo de teste acabou! 🕒");
+                        localStorage.setItem("feedback_pending", "true"); // Flag for Login page
                         wipeAnonymousData(user.uid).then(() => {
                             logout();
                             localStorage.removeItem("@cofrinho/anon_expiration");

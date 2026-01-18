@@ -36,10 +36,12 @@ export default function InvestmentCard({ inv, onToggleDeposit, onOpenSmart, onEd
             <Top>
                 <div>
                     <TitleRow>
-                        <IconBox>
-                            <InvIcon size={20} />
-                        </IconBox>
-                        <Title>{inv.name}</Title>
+                        <NameGroup>
+                            <IconBox>
+                                <InvIcon size={20} />
+                            </IconBox>
+                            <Title>{inv.name}</Title>
+                        </NameGroup>
                         {onOpenSmart && (
                             <SmartBtn onClick={() => onOpenSmart(inv)}>
                                 <APP_ICONS.GiPayMoney size={15} /> Depósito Inteligente
@@ -118,15 +120,16 @@ const Top = styled.div`
 const TitleRow = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 10px;
   flex-wrap: wrap;
-  
-   @media (max-width: 760px) {
-    justify-content: space-between;
-    
-    /* Make title wrapper take available space if needed, 
-       but justified space-between handles the button pushing right */
-  }
+`;
+
+const NameGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 
 const IconBox = styled.div`

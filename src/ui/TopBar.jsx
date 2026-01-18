@@ -5,10 +5,16 @@ import { LayoutDashboard, PiggyBank, Settings } from "lucide-react";
 import SettingsModal from "../components/SettingsModal.jsx";
 import { useState } from "react";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function TopBar() {
     const [showSettings, setShowSettings] = useState(false);
+    const [showFeedback, setShowFeedback] = useState(false);
     const { appName } = useThemeTransition();
+    const { currentUser } = useAuth();
+
+    // Simple Admin Check
+    const isAdmin = currentUser?.email === import.meta.env.VITE_EMAIL_ADMIN;
 
     return (
         <>
@@ -29,12 +35,18 @@ export default function TopBar() {
                             <span className="label">Investimentos</span>
                         </Tab>
                     </Nav>
+                    {isAdmin && (
+                        <IconButton onClick={() => setShowFeedback(true)} title="Ver Avaliações">
+                            <MessageSquare size={20} />
+                        </IconButton>
+                    )}
                     <IconButton onClick={() => setShowSettings(true)}>
                         <Settings size={20} />
                     </IconButton>
                 </Actions>
             </Bar>
             <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
+            <FeedbackListModal open={showFeedback} onClose={() => setShowFeedback(false)} />
         </>
     );
 }

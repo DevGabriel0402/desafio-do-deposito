@@ -1,23 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
-import { ChevronDown, Palette, Zap, Type, LayoutGrid, User } from "lucide-react";
+import { ChevronDown, Palette, Type, LayoutGrid, User } from "lucide-react";
 import Modal from "../ui/Modal.jsx";
 import { Button } from "../ui/Button.jsx";
 import { HexColorPicker } from "react-colorful";
 import { hexToRgba } from "../utils/colors.js";
 import { ICON_OPTIONS } from "../utils/appIcons.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const ICONS_OPTIONS = ICON_OPTIONS;
-
-import { useAuth } from "../context/AuthContext.jsx";
 
 export default function SettingsModal({ open, onClose }) {
   const {
     brandColor, setBrandColor,
     appIcon, setAppIcon,
     appName, setAppName,
-    currentTheme, setCurrentTheme
   } = useThemeTransition();
 
   const { userName, updateUserName } = useAuth();

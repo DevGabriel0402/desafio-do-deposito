@@ -6,7 +6,9 @@ import { loadData, saveData } from "../storage.js";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import SettingsModal from "../components/SettingsModal.jsx";
+import FeedbackListModal from "../components/FeedbackListModal.jsx";
 import { hexToRgba } from "../utils/colors.js";
+import { MessageSquare } from "lucide-react";
 
 import { APP_ICONS } from "../utils/appIcons.js";
 
@@ -14,9 +16,12 @@ const ICONS = APP_ICONS;
 
 export default function Sidebar({ collapsed, onToggle }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const { isDark, toggleTheme, appIcon, brandColor, appName } = useThemeTransition();
-  const { logout } = useAuth();
+  const { logout, currentUser } = useAuth();
+
+  const isAdmin = currentUser?.email === import.meta.env.VITE_EMAIL_ADMIN;
 
   const BrandIconComponent = ICONS[appIcon] || Target;
 
@@ -55,6 +60,13 @@ export default function Sidebar({ collapsed, onToggle }) {
         </Nav>
 
         <Footer>
+          {isAdmin && (
+            <ThemeBtn onClick={() => setShowFeedback(true)} title={collapsed ? "Avaliações" : ""}>
+              <MessageSquare size={18} />
+              {!collapsed && <span>Avaliações</span>}
+            </ThemeBtn>
+          )}
+
           <ThemeBtn onClick={() => setShowSettings(true)} title={collapsed ? "Configurações" : ""}>
             <Settings size={18} />
             {!collapsed && <span>Configurações</span>}
@@ -73,6 +85,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       </Wrap>
 
       <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
+      <FeedbackListModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
 }
@@ -209,6 +222,9 @@ const Item = styled(NavLink)`
     box-shadow: 0 4px 12px ${({ theme }) => hexToRgba(theme.colors.brand, 0.1)};
     font-weight: 900;
 
+    svg {
+      fill: currentColor;
+    }
   }
 
   /* Center icon if collapsed */

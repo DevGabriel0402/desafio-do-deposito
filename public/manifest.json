@@ -1,0 +1,16 @@
+{
+    "name": "Cofrinho MVP",
+    "short_name": "Cofrinho",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#F7F8FA",
+    "theme_color": "#2563EB",
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}

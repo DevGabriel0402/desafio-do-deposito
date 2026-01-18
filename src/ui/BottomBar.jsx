@@ -15,7 +15,7 @@ export default function BottomBar() {
         <CenterContainer>
           <NotchLeft />
           <CenterTab to="/investimentos">
-            <PiggyBank size={48} color="#ffffff" fill="#ffffff" fillOpacity={0.2} />
+            <PiggyBank size={48} color="#ffffff" fill="#ffffff" fillOpacity={1} />
           </CenterTab>
           <NotchRight />
         </CenterContainer>
@@ -110,6 +110,10 @@ const Tab = styled(NavLink)`
 
   &.active {
     color: ${({ theme }) => theme.colors.brand};
+    
+    svg {
+      fill: currentColor;
+    }
   }
 `;
 

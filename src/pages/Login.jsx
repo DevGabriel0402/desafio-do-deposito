@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { useTheme } from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../ui/Button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import piggyHero from "../assets/piggy_login.png";
-import { PiggyBank } from "lucide-react";
+import { PiggyBank, MessageSquarePlus } from "lucide-react";
+import FeedbackModal from "../components/FeedbackModal";
 
 export default function Login() {
   const { login, loginAnonymous, resetPassword } = useAuth();
@@ -15,6 +16,14 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("feedback_pending")) {
+      setShowFeedback(true);
+      localStorage.removeItem("feedback_pending");
+    }
+  }, []);
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -150,6 +159,11 @@ export default function Login() {
           <HeroSubtitle>Transforme pequenos depósitos em grandes sonhos.</HeroSubtitle>
         </Overlay>
       </ImageSection>
+      <FeedbackButton onClick={() => setShowFeedback(true)} title="Avaliar Experiência">
+        <MessageSquarePlus size={24} />
+      </FeedbackButton>
+
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </Container>
   );
 }
@@ -319,5 +333,32 @@ const ForgotBtn = styled.button`
   
   &:hover {
     text-decoration: underline;
+  }
+`;
+
+const FeedbackButton = styled.button`
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #2563EB;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 50;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 `;

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Target, Sun, Moon, Settings, LogOut } from "lucide-react";
+import { Target, Sun, Moon, Settings, LogOut, MessageSquare } from "lucide-react";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import SettingsModal from "../components/SettingsModal.jsx";
+import FeedbackListModal from "../components/FeedbackListModal.jsx";
 import { hexToRgba } from "../utils/colors.js";
 
 import { APP_ICONS } from "../utils/appIcons.js";
@@ -12,8 +13,11 @@ const ICONS = APP_ICONS;
 
 export default function MobileHeader() {
   const { isDark, toggleTheme, brandColor, appIcon, appName } = useThemeTransition();
-  const { logout } = useAuth();
+  const { logout, currentUser } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  const isAdmin = currentUser?.email === import.meta.env.VITE_EMAIL_ADMIN;
 
   const BrandIconComponent = ICONS[appIcon] || Target;
 
@@ -32,6 +36,12 @@ export default function MobileHeader() {
         </Brand>
 
         <Right>
+          {isAdmin && (
+            <SettingsBtn onClick={() => setShowFeedback(true)} title="Ver Avaliações">
+              <MessageSquare size={20} />
+            </SettingsBtn>
+          )}
+
           <SettingsBtn onClick={() => setShowSettings(true)}>
             <Settings size={20} />
           </SettingsBtn>
@@ -46,6 +56,7 @@ export default function MobileHeader() {
       </Wrap>
 
       <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
+      <FeedbackListModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   );
 }

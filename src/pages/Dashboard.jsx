@@ -250,9 +250,9 @@ const Badge = styled.div`
 `;
 
 const StatValue = styled.div`
-  margin-top: 14px;
+  margin-top: 8px;
   font-weight: 950;
-  font-size: 32px;
+  font-size: 26px;
   letter-spacing: -0.5px;
   color: ${({ $glass, theme }) => {
         if (theme.name === "dark") return theme.colors.text;
@@ -260,7 +260,7 @@ const StatValue = styled.div`
     }};
 
   @media (max-width: 600px) {
-    font-size: 28px;
+    font-size: 22px;
   }
 `;
 
@@ -272,6 +272,7 @@ const GlassCard = styled(Card)`
   -webkit-backdrop-filter: blur(12px) saturate(220%);
   position: relative;
   overflow: hidden;
+  padding: 16px;
 
   &::before {
     content: '';
@@ -288,6 +289,7 @@ const GlassCard = styled(Card)`
 
 const H3 = styled.h3`
   margin: 0 0 10px 0;
+  font-size: 16px;
 `;
 
 const ChartBox = styled.div`
