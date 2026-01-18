@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { db } from "../services/firebase";
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit } from "firebase/firestore";
 import { hexToRgba } from "../utils/colors";
+import { toast } from "react-toastify";
 
 export default function AdminChatWidget() {
   const { currentUser } = useAuth();
@@ -13,6 +14,7 @@ export default function AdminChatWidget() {
   const [newMessage, setNewMessage] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const firstLoad = useRef(true);
 
   const adminEmail = import.meta.env.VITE_EMAIL_ADMIN;
   const sociaEmail = import.meta.env.VITE_EMAIL_SOCIO;
@@ -32,11 +34,31 @@ export default function AdminChatWidget() {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      // Logic for new message notification
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const msg = change.doc.data();
+          // Only notify if not first load AND not my own message
+          if (!firstLoad.current && msg.senderEmail !== currentUser.email) {
+            toast.info(`Nova mensagem de ${msg.senderName || "Sócio"}: "${msg.text.substring(0, 30)}${msg.text.length > 30 ? "..." : ""}"`, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
+            // Play notification sound? (Optional, skipping for now as not requested explicitly but toast is good)
+          }
+        }
+      });
+
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })).reverse(); // Revert to show oldest first at top
       setMessages(data);
+      firstLoad.current = false;
     });
 
     return () => unsubscribe();
