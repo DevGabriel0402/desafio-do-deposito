@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components"; // [RESTORED]
-import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
-import { ChevronDown, Palette, Type, LayoutGrid, User, Lock } from "lucide-react";
+import { ChevronDown, Palette, Type, LayoutGrid, User, Wifi, WifiOff } from "lucide-react";
 import { toast } from "react-toastify";
 import Modal from "../ui/Modal.jsx";
 import { Button } from "../ui/Button.jsx";
@@ -20,15 +19,15 @@ export default function SettingsModal({ open, onClose }) {
     appName, setAppName,
   } = useThemeTransition();
 
-  const { userName, updateUserName, updateUserPassword } = useAuth();
+  const { userName, updateUserName } = useAuth();
 
   // Local draft state
   const [draftColor, setDraftColor] = useState(brandColor);
   const [draftIcon, setDraftIcon] = useState(appIcon);
   const [draftName, setDraftName] = useState(appName);
   const [draftUserName, setDraftUserName] = useState(userName);
-  const [draftPassword, setDraftPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const [iconOpen, setIconOpen] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -41,10 +40,22 @@ export default function SettingsModal({ open, onClose }) {
       setDraftIcon(appIcon);
       setDraftName(appName);
       setDraftUserName(userName);
-      setDraftPassword("");
-      setConfirmPassword("");
     }
   }, [open, brandColor, appIcon, appName, userName]);
+
+  // Online status listener
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -57,30 +68,6 @@ export default function SettingsModal({ open, onClose }) {
   }, []);
 
   async function handleSave() {
-    if (draftPassword) {
-      if (draftPassword !== confirmPassword) {
-        toast.warn("As senhas não coincidem!");
-        return;
-      }
-      if (draftPassword.length < 6) {
-        toast.warn("Senha deve ter no mínimo 6 caracteres.");
-        return;
-      }
-      try {
-        await updateUserPassword(draftPassword);
-        toast.success("Senha atualizada!");
-      } catch (error) {
-        console.error(error);
-        if (error.code === 'auth/requires-recent-login') {
-          toast.error("Por segurança, faça login novamente para trocar a senha.");
-          // Optional: force logout functionality could be added here
-        } else {
-          toast.error("Erro ao atualizar senha (" + error.code + ")");
-        }
-        return;
-      }
-    }
-
     setBrandColor(draftColor);
     setAppIcon(draftIcon);
     setAppName(draftName);
@@ -93,6 +80,12 @@ export default function SettingsModal({ open, onClose }) {
 
   return (
     <Modal title="Aparência e Estilo" open={open} onClose={onClose} maxWidth="480px">
+
+      {/* Offline/Online Badge */}
+      <StatusBadge $isOnline={isOnline}>
+        {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
+        <span>{isOnline ? "Você está Online" : "Você está Offline"}</span>
+      </StatusBadge>
 
       <GridContainer>
         {/* Coluna Esquerda: Dados Principais */}
@@ -149,10 +142,7 @@ export default function SettingsModal({ open, onClose }) {
               )}
             </SelectWrapper>
           </Section>
-        </LeftCol>
 
-        {/* Coluna Direita: Cor e Segurança */}
-        <RightCol>
           <Section>
             <Label><Palette size={14} /> Cor de Destaque</Label>
             <ColorCard onClick={() => setShowColorPicker(!showColorPicker)}>
@@ -167,24 +157,8 @@ export default function SettingsModal({ open, onClose }) {
               </PickerWrap>
             )}
           </Section>
+        </LeftCol>
 
-          <Section>
-            <Label><Lock size={14} /> Segurança (Opcional)</Label>
-            <Input
-              type="password"
-              value={draftPassword}
-              onChange={(e) => setDraftPassword(e.target.value)}
-              placeholder="Nova Senha"
-            />
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmar Nova Senha"
-            />
-            <PasswordStrengthMeter password={draftPassword} />
-          </Section>
-        </RightCol>
       </GridContainer>
 
       <Footer>
@@ -195,15 +169,27 @@ export default function SettingsModal({ open, onClose }) {
   );
 }
 
+const StatusBadge = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  
+  background: ${({ $isOnline }) => $isOnline ? "#dcfce7" : "#fee2e2"};
+  color: ${({ $isOnline }) => $isOnline ? "#166534" : "#991b1b"};
+  border: 1px solid ${({ $isOnline }) => $isOnline ? "#bbf7d0" : "#fecaca"};
+`;
+
 const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
   margin-bottom: 24px;
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const LeftCol = styled.div`
@@ -212,11 +198,7 @@ const LeftCol = styled.div`
   gap: 20px;
 `;
 
-const RightCol = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
+// RightCol removed as content was merged or removed
 
 const Section = styled.div`
   display: flex;
