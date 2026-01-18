@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
+import styled from "styled-components"; // [RESTORED]
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
-import { ChevronDown, Palette, Type, LayoutGrid, User } from "lucide-react";
+import { ChevronDown, Palette, Type, LayoutGrid, User, Lock } from "lucide-react";
+import { toast } from "react-toastify";
 import Modal from "../ui/Modal.jsx";
 import { Button } from "../ui/Button.jsx";
 import { HexColorPicker } from "react-colorful";
@@ -18,13 +20,15 @@ export default function SettingsModal({ open, onClose }) {
     appName, setAppName,
   } = useThemeTransition();
 
-  const { userName, updateUserName } = useAuth();
+  const { userName, updateUserName, updateUserPassword } = useAuth();
 
   // Local draft state
   const [draftColor, setDraftColor] = useState(brandColor);
   const [draftIcon, setDraftIcon] = useState(appIcon);
   const [draftName, setDraftName] = useState(appName);
   const [draftUserName, setDraftUserName] = useState(userName);
+  const [draftPassword, setDraftPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [iconOpen, setIconOpen] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -37,6 +41,8 @@ export default function SettingsModal({ open, onClose }) {
       setDraftIcon(appIcon);
       setDraftName(appName);
       setDraftUserName(userName);
+      setDraftPassword("");
+      setConfirmPassword("");
     }
   }, [open, brandColor, appIcon, appName, userName]);
 
@@ -50,7 +56,31 @@ export default function SettingsModal({ open, onClose }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleSave() {
+  async function handleSave() {
+    if (draftPassword) {
+      if (draftPassword !== confirmPassword) {
+        toast.warn("As senhas não coincidem!");
+        return;
+      }
+      if (draftPassword.length < 6) {
+        toast.warn("Senha deve ter no mínimo 6 caracteres.");
+        return;
+      }
+      try {
+        await updateUserPassword(draftPassword);
+        toast.success("Senha atualizada!");
+      } catch (error) {
+        console.error(error);
+        if (error.code === 'auth/requires-recent-login') {
+          toast.error("Por segurança, faça login novamente para trocar a senha.");
+          // Optional: force logout functionality could be added here
+        } else {
+          toast.error("Erro ao atualizar senha (" + error.code + ")");
+        }
+        return;
+      }
+    }
+
     setBrandColor(draftColor);
     setAppIcon(draftIcon);
     setAppName(draftName);
@@ -121,7 +151,7 @@ export default function SettingsModal({ open, onClose }) {
           </Section>
         </LeftCol>
 
-        {/* Coluna Direita: Cor */}
+        {/* Coluna Direita: Cor e Segurança */}
         <RightCol>
           <Section>
             <Label><Palette size={14} /> Cor de Destaque</Label>
@@ -136,6 +166,23 @@ export default function SettingsModal({ open, onClose }) {
                 <HexColorPicker color={draftColor} onChange={setDraftColor} />
               </PickerWrap>
             )}
+          </Section>
+
+          <Section>
+            <Label><Lock size={14} /> Segurança (Opcional)</Label>
+            <Input
+              type="password"
+              value={draftPassword}
+              onChange={(e) => setDraftPassword(e.target.value)}
+              placeholder="Nova Senha"
+            />
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirmar Nova Senha"
+            />
+            <PasswordStrengthMeter password={draftPassword} />
           </Section>
         </RightCol>
       </GridContainer>

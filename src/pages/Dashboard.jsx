@@ -2,9 +2,10 @@ import React, { useMemo } from "react";
 import styled, { useTheme } from "styled-components";
 import { formatBRL } from "../utils/format.js";
 import { hexToRgba } from "../utils/colors.js";
+import { useNavigate } from "react-router-dom"; // [NEW]
 import { Card } from "../ui/Card.jsx";
 import { Grid } from "../ui/Layout.jsx";
-import { TrendingUp, PiggyBank, CheckCheck } from "lucide-react";
+import { TrendingUp, PiggyBank, CheckCheck, User } from "lucide-react"; // [UPDATED]
 import { useData } from "../context/DataContext.jsx";
 import {
     ResponsiveContainer,
@@ -23,6 +24,9 @@ export default function Dashboard() {
     const { investments } = useData();
     const { currentUser, userName, isWelcomePending, markWelcomeAsShown } = useAuth();
     const theme = useTheme();
+    const navigate = useNavigate();
+
+    const isAdmin = currentUser?.email === import.meta.env.VITE_EMAIL_ADMIN;
 
     // Use name from AuthContext (which handles Admin/Socia logic via default or user pref)
     const displayGreeting = useMemo(() => {
@@ -196,9 +200,43 @@ export default function Dashboard() {
                     </Muted>
                 )}
             </Card>
+            {isAdmin && (
+                <UsersFab onClick={() => navigate("/admin/users")} title="Gerenciar Usuários">
+                    <User size={24} />
+                </UsersFab>
+            )}
         </Grid>
     );
 }
+
+const UsersFab = styled.button`
+  position: fixed;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.brand};
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.2s;
+
+  /* Mobile: Above BottomBar (~94px safe area + 20px gap) */
+  bottom: 120px;
+  right: 24px;
+
+  /* Desktop: Hide */
+  @media (min-width: 900px) {
+    display: none;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
 
 function Stat({ icon, title, value, $glass }) {
     const CardComp = $glass ? GlassCard : Card;

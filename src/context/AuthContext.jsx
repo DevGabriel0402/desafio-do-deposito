@@ -5,11 +5,12 @@ import {
     signOut,
     onAuthStateChanged,
     signInAnonymously,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    updatePassword
 } from "firebase/auth";
 import { auth, db } from "../services/firebase";
 import { toast } from "react-toastify";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { PiggyBank } from "lucide-react";
 
 const AuthContext = createContext();
@@ -37,8 +38,24 @@ export function AuthProvider({ children }) {
         return signInWithEmailAndPassword(auth, email, password);
     }
 
-    function register(email, password) {
-        return createUserWithEmailAndPassword(auth, email, password);
+    async function register(email, password) {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Create public user doc for Admin listing
+        try {
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName || "", // Initially empty
+                role: "client",
+                createdAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Error creating user doc:", e);
+        }
+
+        return userCredential;
     }
 
     function loginAnonymous() {

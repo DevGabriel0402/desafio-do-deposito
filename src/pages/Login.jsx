@@ -5,8 +5,9 @@ import { Button } from "../ui/Button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import piggyHero from "../assets/piggy_login.png";
-import { PiggyBank, MessageSquarePlus } from "lucide-react";
+import { PiggyBank, MessageSquarePlus, UserPlus } from "lucide-react";
 import FeedbackModal from "../components/FeedbackModal";
+import RegistrationRequestModal from "../components/RegistrationRequestModal"; // [NEW]
 
 export default function Login() {
   const { login, loginAnonymous, resetPassword } = useAuth();
@@ -17,6 +18,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false); // [NEW]
 
   useEffect(() => {
     if (localStorage.getItem("feedback_pending")) {
@@ -159,11 +161,16 @@ export default function Login() {
           <HeroSubtitle>Transforme pequenos depósitos em grandes sonhos.</HeroSubtitle>
         </Overlay>
       </ImageSection>
+      <RegisterButton onClick={() => setShowRegisterModal(true)} title="Solicitar Cadastro">
+        <UserPlus size={24} />
+      </RegisterButton>
+
       <FeedbackButton onClick={() => setShowFeedback(true)} title="Avaliar Experiência">
         <MessageSquarePlus size={24} />
       </FeedbackButton>
 
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
+      <RegistrationRequestModal open={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
     </Container>
   );
 }
@@ -333,6 +340,35 @@ const ForgotBtn = styled.button`
   
   &:hover {
     text-decoration: underline;
+  }
+`;
+
+const RegisterButton = styled.button`
+  position: fixed;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors?.brand || '#2563EB'}; // Fallback if theme not available in login
+  color: white;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 50;
+  
+  /* Mobile: Side by side (Left of Feedback) */
+  bottom: 24px;
+  right: 90px;
+
+  /* Desktop: Above Feedback */
+  @media (min-width: 900px) {
+    bottom: 90px;
+    right: 24px;
+  }
+
+  &:hover {
+    transform: scale(1.1);
   }
 `;
 

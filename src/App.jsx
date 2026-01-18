@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Investimentos from "./pages/Investimentos.jsx";
 import MeusInvestimentos from "./pages/MeusInvestimentos.jsx";
 import Login from "./pages/Login.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx"; // [NEW]
 
 import ProtectedRoute from "./ui/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/investimentos" element={<ProtectedRoute><Investimentos /></ProtectedRoute>} />
             <Route path="/meus" element={<ProtectedRoute><MeusInvestimentos /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Main>

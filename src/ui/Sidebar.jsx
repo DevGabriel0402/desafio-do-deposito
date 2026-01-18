@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, ListChecks, Target, ChevronLeft, ChevronRight, Sun, Moon, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, ListChecks, Target, ChevronLeft, ChevronRight, Sun, Moon, Settings, LogOut, User } from "lucide-react";
 import { GiTakeMyMoney } from "react-icons/gi";
 import { loadData, saveData } from "../storage.js";
 import { useThemeTransition } from "../context/ThemeContext.jsx";
@@ -58,6 +58,13 @@ export default function Sidebar({ collapsed, onToggle }) {
             <ListChecks size={18} />
             {!collapsed && <span>Meus Desafios</span>}
           </Item>
+
+          {isAdmin && (
+            <Item to="/admin/users" title={collapsed ? "Usuários" : ""}>
+              <User size={18} />
+              {!collapsed && <span>Usuários</span>}
+            </Item>
+          )}
         </Nav>
 
         <Footer>
